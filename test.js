@@ -6,6 +6,7 @@ const BigInteger = require('jsbn').BigInteger;
 const utils = require('./utils.js');
 
 const Block = require('./block.js');
+const Blockchain = require('./blockchain.js');
 const Client = require('./client.js');
 const Miner = require('./miner.js');
 const Transaction = require('./transaction.js');
@@ -123,7 +124,8 @@ describe('Block', () => {
 
       let serialBlock = b.serialize();
       let o = JSON.parse(serialBlock);
-      let b2 = Block.deserialize(o);
+      //let b2 = Block.deserialize(o);
+      let b2 = Blockchain.deserializeBlock(o, Block, Transaction);
       b2.rerun(prevBlock);
 
       // Verify hashes still match

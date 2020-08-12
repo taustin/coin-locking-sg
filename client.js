@@ -3,16 +3,17 @@
 let EventEmitter = require('events');
 
 let Block = require('./block.js');
+let Blockchain = require('./blockchain.js');
 let Transaction = require('./transaction.js');
 
 let utils = require('./utils.js');
 
-const DEFAULT_TX_FEE = 1;
+//const DEFAULT_TX_FEE = 1;
 
 // If a block is 6 blocks older than the current block, it is considered
 // confirmed, for no better reason than that is what Bitcoin does.
 // Note that the genesis block is always considered to be confirmed.
-const CONFIRMED_DEPTH = 6;
+//const CONFIRMED_DEPTH = 6;
 
 /**
  * A client has a public/private keypair and an address.
@@ -20,9 +21,9 @@ const CONFIRMED_DEPTH = 6;
  */
 module.exports = class Client extends EventEmitter {
   // Network message types
-  static get MISSING_BLOCK() { return "MISSING_BLOCK"; }
-  static get POST_TRANSACTION() { return "POST_TRANSACTION"; }
-  static get PROOF_FOUND() { return "PROOF_FOUND"; }
+  //static get MISSING_BLOCK() { return "MISSING_BLOCK"; }
+  //static get POST_TRANSACTION() { return "POST_TRANSACTION"; }
+  //static get PROOF_FOUND() { return "PROOF_FOUND"; }
 
   /**
    * The net object determines how the client communicates
@@ -38,6 +39,10 @@ module.exports = class Client extends EventEmitter {
    */
   constructor({name, net, startingBlock} = {}) {
     super();
+
+    // Genericizing client
+    this.BlockClass = Block;
+    this.TransactionClass = Transaction;
 
     this.net = net;
     this.name = name;
@@ -69,8 +74,8 @@ module.exports = class Client extends EventEmitter {
     }
 
     // Setting up listeners to receive messages from other clients.
-    this.on(Client.PROOF_FOUND, this.receiveBlock);
-    this.on(Client.MISSING_BLOCK, this.provideMissingBlock);
+    this.on(Blockchain.PROOF_FOUND, this.receiveBlock);
+    this.on(Blockchain.MISSING_BLOCK, this.provideMissingBlock);
   }
 
   /**
@@ -129,7 +134,7 @@ module.exports = class Client extends EventEmitter {
    *    amounts to pay.
    * @param {number} [fee] - The transaction fee reward to pay the miner.
    */
-  postTransaction(outputs, fee=DEFAULT_TX_FEE) {
+  postTransaction(outputs, fee=Blockchain.DEFAULT_TX_FEE) {
     // We calculate the total value of gold needed.
     let totalPayments = outputs.reduce((acc, {amount}) => acc + amount, 0) + fee;
 
@@ -154,7 +159,7 @@ module.exports = class Client extends EventEmitter {
 
     this.nonce++;
 
-    this.net.broadcast(Client.POST_TRANSACTION, tx);
+    this.net.broadcast(Blockchain.POST_TRANSACTION, tx);
   }
 
   /**
@@ -174,8 +179,9 @@ module.exports = class Client extends EventEmitter {
    */
   receiveBlock(block) {
     // If the block is a string, then deserialize it.
-    if (!(block instanceof Block)) {
-      block = Block.deserialize(block);
+    if (!(block instanceof this.BlockClass)) {
+      //block = Block.deserialize(block);
+      block = Blockchain.deserializeBlock(block, this.BlockClass, this.TransactionClass);
     }
 
     // Ignore the block if it has been received previously.
@@ -247,7 +253,7 @@ module.exports = class Client extends EventEmitter {
       missing: block.prevBlockHash,
     };
     //this.net.broadcast(Client.MISSING_BLOCK, JSON.stringify(msg));
-    this.net.broadcast(Client.MISSING_BLOCK, msg);
+    this.net.broadcast(Blockchain.MISSING_BLOCK, msg);
   }
 
   /**
@@ -255,7 +261,7 @@ module.exports = class Client extends EventEmitter {
    */
   resendPendingTransactions() {
     this.pendingOutgoingTransactions.forEach((tx) => {
-      this.net.broadcast(Client.POST_TRANSACTION, tx);
+      this.net.broadcast(Blockchain.POST_TRANSACTION, tx);
     });
   }
 
@@ -272,7 +278,7 @@ module.exports = class Client extends EventEmitter {
       this.log(`Providing missing block ${msg.missing}`);
       let block = this.blocks.get(msg.missing);
       //this.net.sendMessage(msg.from, Client.PROOF_FOUND, block.serialize());
-      this.net.sendMessage(msg.from, Client.PROOF_FOUND, block);
+      this.net.sendMessage(msg.from, Blockchain.PROOF_FOUND, block);
     }
   }
 
@@ -283,7 +289,7 @@ module.exports = class Client extends EventEmitter {
    */
   setLastConfirmed() {
     let block = this.lastBlock;
-    let confirmedBlockHeight = block.chainLength - CONFIRMED_DEPTH;
+    let confirmedBlockHeight = block.chainLength - Blockchain.CONFIRMED_DEPTH;
     if (confirmedBlockHeight < 0) {
       confirmedBlockHeight = 0;
     }
