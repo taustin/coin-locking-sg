@@ -27,7 +27,7 @@ Blockchain.makeGenesis(new Map([
   [bob, 99],
   [charlie, 67],
   [minnie, 400],
-  [mickey, 322],
+  [mickey, 300],
 ]), LockingBlock);
 
 // Late miner - Donald has more mining power, represented by the miningRounds.
@@ -54,13 +54,13 @@ minnie.initialize();
 mickey.initialize();
 
 // Alice transfers some money to Bob.
-console.log(`Alice is transfering 40 gold to ${bob.address}`);
+console.log(`Alice is transferring 40 gold to ${bob.address}`);
 alice.postTransaction([{ amount: 40, address: bob.address }]);
 
 // Alice locks 40 gold to generate two gold as a transaction fee,
 // and 100 gold to generate 5 gold for charlie.  These 140 gold become
 // unspendable temporarily, but Alice does not lose them.
-console.log(`Alice is locking 100 gold to reward ${charlie.address} with 20 gold`);
+console.log(`Alice is locking 100 gold to reward ${charlie.address} with 20 gold, and locking 40 to reward miner with 2 gold.`);
 alice.postLockingTransaction([{ amount: 100, address: charlie.address}], 40);
 
 //setTimeout(() => {

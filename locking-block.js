@@ -10,6 +10,8 @@ module.exports = class LockingBlock extends Block {
 
     this.lockedFunds = (prevBlock && prevBlock.lockedFunds) ? new Map(prevBlock.lockedFunds) : new Map();
 
+    // TODO: Check whether funds should be unlocked.
+
     this.BlockClass = LockingBlock;
     this.TransactionClass = LockingTransaction;
   }
@@ -55,7 +57,10 @@ module.exports = class LockingBlock extends Block {
   totalRewards() {
     // Note that super.totalRewards will return the standard spartanGold rewards.
     return [...this.transactions].reduce(
-      (reward, [, tx]) => reward + LockingTransaction.goldGenerated(tx.data.lockingFee),
+      (reward, [, tx]) => {
+        let lockingReward = tx.data.lockingFee ? LockingTransaction.goldGenerated(tx.data.lockingFee) : 0;
+        return reward + lockingReward;
+      },
       super.totalRewards());
   }
 

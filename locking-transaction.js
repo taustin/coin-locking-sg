@@ -17,7 +17,6 @@ module.exports = class LockingTransaction extends Transaction{
    * coins for other clients.
    */
   get amountGoldLocked() {
-    //if (this.data.lockingOutputs)
     let lockingOutputs = this.data.lockingOutputs || [];
     return lockingOutputs.reduce(
       (totalLocked, {amount}) => totalLocked + amount,
@@ -31,7 +30,6 @@ module.exports = class LockingTransaction extends Transaction{
   sufficientFunds(block) {
     let goldNeeded = this.totalOutput() + this.amountGoldLocked;
     let goldAvail = block.balanceOf(this.from) - block.lockedGold(this.from);
-    console.log(`*****Requesting ${goldNeeded}; have ${goldAvail}`);
     return goldNeeded <= goldAvail;
   }
 

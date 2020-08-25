@@ -96,7 +96,6 @@ module.exports = class Block {
     if (prevBlock && prevBlock.rewardAddr) {
       // Add the previous block's rewards to the miner who found the proof.
       let winnerBalance = this.balanceOf(prevBlock.rewardAddr) || 0;
-      console.log(`---Rewards from previous block: ${prevBlock.totalRewards()}`);
       this.balances.set(prevBlock.rewardAddr, winnerBalance + prevBlock.totalRewards());
     }
 
