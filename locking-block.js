@@ -3,17 +3,39 @@
 const Block = require('./block.js');
 const LockingTransaction = require('./locking-transaction.js');
 
+const LOCK_DURATION_ROUNDS = 55;
+
 module.exports = class LockingBlock extends Block {
 
   constructor(rewardAddr, prevBlock, target, coinbaseReward) {
     super(rewardAddr, prevBlock, target, coinbaseReward);
 
+    // Tracking current balances of locked gold:  clientID -> totalAmount
     this.lockedFunds = (prevBlock && prevBlock.lockedFunds) ? new Map(prevBlock.lockedFunds) : new Map();
 
-    // TODO: Check whether funds should be unlocked.
+    // Tracking when to unlock gold:  blockLocked -> [{ clientID, amount }]
+    this.unlockingEvents = (prevBlock && prevBlock.unlockingEvents) ? new Map(prevBlock.unlockingEvents) : new Map();
+
+    this.unlockFunds();
 
     this.BlockClass = LockingBlock;
     this.TransactionClass = LockingTransaction;
+  }
+
+  unlockFunds() {
+    // Updating locked gold balances if the locking time has elapsed.
+    if (this.unlockingEvents.has(this.chainLength)) {
+      let q = this.unlockingEvents.get(this.chainLength);
+      q.forEach(({clientID, amount}) => {
+        console.log(`Unlocking ${amount} gold for ${clientID} at block ${this.chainLength}`);
+        let totalLocked = this.lockedFunds.get(clientID);
+        this.lockedFunds.set(clientID, totalLocked - amount);
+      });
+
+      // No longer need to track these locking events.
+      this.unlockingEvents.delete(this.chainLength);
+    }
+
   }
 
   /**
@@ -26,20 +48,26 @@ module.exports = class LockingBlock extends Block {
   addTransaction(tx, client) {
     if (!super.addTransaction(tx, client)) return false;
 
-    // Updating amount of locked gold.
-    let goldLocked = this.lockedGold(tx.from);
-    this.lockedFunds.set(tx.from, goldLocked + tx.amountGoldLocked);
+    // Updating amount of locked gold, if there was any locking.
+    if (tx.amountGoldLocked > 0) {
+      let goldLocked = this.lockedGold(tx.from);
+      this.lockedFunds.set(tx.from, goldLocked + tx.amountGoldLocked);
 
-    console.log(`Gold locked: ${goldLocked}; tx locked: ${tx.amountGoldLocked}`);
+      // tracking when to unlock gold
+      let unlockingRound = this.chainLength + LOCK_DURATION_ROUNDS;
+      let q = this.unlockingEvents.get(unlockingRound) || [];
+      q.push({clientID: tx.from, amount: tx.amountGoldLocked});
+      this.unlockingEvents.set(unlockingRound, q);
 
-    // TODO: Make sure that lockingFee goes to the right place
+      console.log(`Gold locked: ${goldLocked}; tx locked: ${tx.amountGoldLocked}`);
 
-    // Giving generated reward to outputs.
-    if (tx.data.lockingOutputs) tx.data.lockingOutputs.forEach(({amount, address}) => {
-      let receiverBalance = this.balances.get(address);
-      let minted = LockingTransaction.goldGenerated(amount);
-      this.balances.set(address, receiverBalance + minted);
-    });
+      // Giving generated reward to outputs.
+      if (tx.data.lockingOutputs) tx.data.lockingOutputs.forEach(({amount, address}) => {
+        let receiverBalance = this.balances.get(address);
+        let minted = LockingTransaction.goldGenerated(amount);
+        this.balances.set(address, receiverBalance + minted);
+      });
+    }
 
     // Transaction added successfully.
     return true;
@@ -69,8 +97,12 @@ module.exports = class LockingBlock extends Block {
   }
 
   rerun(prevBlock) {
-    // For this version need to track locked funds as well.
+    // For coinLocking, we need to track locked funds and locking events as well.
     this.lockedFunds = new Map(prevBlock.lockedFunds);
+    this.unlockingEvents = new Map(prevBlock.unlockingEvents);
+
+    // Need to repeat any gold unlocking.
+    this.unlockFunds();
 
     return super.rerun(prevBlock);
   }
