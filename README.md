@@ -1,15 +1,17 @@
-# SpartanGold
+# CoinLocking SpartanGold
 
-SpartanGold (SG) is a simplified blockchain-based cryptocurrency for education and experimentation.
+Coin-locking is an approach designed to provide "free" transactions by allowing clients to lock their coins to generate pre-paid interest as a reward for miners.  Clients maintain ownership of their coins, but sacrifice liquidity in order to generate rewards.
 
-Its design is *loosely* based on Bitcoin.  Like Bitcoin, SpartanGold uses a proof-of-work (PoW) blockchain.  However, several parts of the design are simplified.  For example:
+This mechanism can also be used to generate money for other clients, or other services on the blockchain.  Essentially, clients can buy coins as a rough stand-in for a service rate.  However, the amount of service their coins will buy depends on the current market price of the coins.
 
-- SpartanGold uses an **account-based** model, rather than Bitcoin's unspent transaction output (UTXO) model.
-- No scripting language is used.  Transactions are only designed to transfer money (gold in SG parlance).
-- The proof-of-work target is not adjusted during program execution.
+In contrast, Bitcoin has two different reward mechanisms: the coinbase transaction minting new money for the winning miner, and transaction fees for the clients.  Coin-locking combines these mechanisms, offering the benefits of both.
 
-All of these features could be added to SpartanGold, but we want to make the design as simple and easy to modify as possible.
+Note that coins can still be spent in the usual manner.
 
+This code base is built on top of SpartanGold, a simplified blockchain-based cryptocurrency for education and experimentation.  For more details about SpartanGold, see
+[the SpartanGold github page](https://github.com/taustin/spartan-gold/)
+
+For more details on the coin-locking model, refer to [the original DAPPCON paper](https://ieeexplore.ieee.org/document/8783004).  Note that in the original paper, we referred to this model as the "token-locking model to be consistent with the terminology used for the [0chain blockchain](https://0chain.net/).
 
 ## Using SpartanGold
 
@@ -28,11 +30,9 @@ To see an example, run driver.js from the command line:
 $ node driver.js
 ``
 
-This script has three miners, *Minnie*, *Mickey*, and *Donald*, along with three additional non-mining clients.  Donald starts after a delay and must spend some time catching up with the other two miners.
+This script has two miners, *Minnie* and *Mickey*, along with three additional non-mining clients.
 
-One point to note is that Donald is given more mining power, represented as the `miningRounds` parameter.  Minnie and Mickey try 2000 hashes when it is their turn to find a proof, whereas Donald tries 3000 hashes.  Over time, Donald should earn more rewards than the other two miners, despite his late start.
-
-Note that the use of `miningRounds` as a way to specify mining power only works in single-threaded mode.
+In this script, Alice writes 2 transactions.  In the first, she gives coins to Bob and offers coins as a transaction fee, following the standard model used in Bitcoin.  In the second, Alice instead locks funds to generate interest given to Charlie, and locks additional funds as a mining reward.  The balances are displayed both after locking and after unlocking.  (Note that the timeout values may need to be adjusted for your system).
 
 ### Multi-process Mode
 
@@ -74,9 +74,3 @@ The two miners will now race to find proofs, sending their blocks back and forth
 
 While this mode is a little more complex, it creates a more realistic feel, and takes away some possible "cheats" that you can get away with in single-threaded mode.
 
-## Projects Based on SpartanGold
-
-SpartanGold is designed to allow students to experiment with a Bitcoin-like cryptocurrency.  A few different projects have used it as the basis of a cryptocurrency prototype:
-
-- For her [master's thesis](https://scholarworks.sjsu.edu/etd_projects/675/), Jisha Pillai developed a fork of SG with [earmarked UTXOs](https://github.com/jishavps/spartan-gold).  Note that this was based on an older version of SG that used a UTXO model.
-- Prashant Pardeshi's thesis implemented [TontineCoin](https://scholarworks.sjsu.edu/etd_projects/914/), a proof-of-stake cryptocurrency.  [His implementation](https://github.com/prashantp-git/TontineCoin) combined a TenderMint-like protocol with the Tontine financial structure.
