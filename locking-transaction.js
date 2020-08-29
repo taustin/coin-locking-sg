@@ -26,6 +26,10 @@ module.exports = class LockingTransaction extends Transaction{
   /**
    * Must verify that client has enough money NOT INCLUDING LOCKED FUNDS
    * for the total money spent AND the money that is set to be locked.
+   * 
+   * @param {LockingBlock} - The block used to check current balances.
+   * 
+   * @returns {boolean} True if there are sufficient funds for the transaction.
    */
   sufficientFunds(block) {
     let goldNeeded = this.totalOutput() + this.amountGoldLocked;

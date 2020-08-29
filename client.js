@@ -8,22 +8,11 @@ let Transaction = require('./transaction.js');
 
 let utils = require('./utils.js');
 
-//const DEFAULT_TX_FEE = 1;
-
-// If a block is 6 blocks older than the current block, it is considered
-// confirmed, for no better reason than that is what Bitcoin does.
-// Note that the genesis block is always considered to be confirmed.
-//const CONFIRMED_DEPTH = 6;
-
 /**
  * A client has a public/private keypair and an address.
  * It can send and receive messages on the Blockchain network.
  */
 module.exports = class Client extends EventEmitter {
-  // Network message types
-  //static get MISSING_BLOCK() { return "MISSING_BLOCK"; }
-  //static get POST_TRANSACTION() { return "POST_TRANSACTION"; }
-  //static get PROOF_FOUND() { return "PROOF_FOUND"; }
 
   /**
    * The net object determines how the client communicates
@@ -180,7 +169,6 @@ module.exports = class Client extends EventEmitter {
   receiveBlock(block) {
     // If the block is a string, then deserialize it.
     if (!(block instanceof this.BlockClass)) {
-      //block = Block.deserialize(block);
       block = Blockchain.deserializeBlock(block, this.BlockClass, this.TransactionClass);
     }
 
@@ -252,7 +240,6 @@ module.exports = class Client extends EventEmitter {
       from: this.address,
       missing: block.prevBlockHash,
     };
-    //this.net.broadcast(Client.MISSING_BLOCK, JSON.stringify(msg));
     this.net.broadcast(Blockchain.MISSING_BLOCK, msg);
   }
 

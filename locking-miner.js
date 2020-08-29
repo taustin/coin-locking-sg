@@ -9,18 +9,10 @@ module.exports = class LockingMiner extends Miner {
   constructor(...args) {
     super(...args);
 
-    // Changing methods inherited from client to use the LockingClient variant.
-    this.postTransaction = LockingClient.postTransaction;
+    // Adding postLockingTransaction method from the LockingClient class.
+    this.postLockingTransaction = LockingClient.postLockingTransaction;
 
     this.BlockClass = LockingBlock;
     this.TransactionClass = LockingTransaction;
-  }
-
-  // Make sure that the prototype of the current block is correct.
-  startNewSearch(address, lastBlock) {
-    super.startNewSearch(address, lastBlock);
-    //let lb = new LockingBlock();
-    //this.currentBlock.__proto__ = lb.__proto__;
-    this.currentBlock.lockedFunds = lastBlock ? new Map(lastBlock.lockedFunds) : new Map();
   }
 };

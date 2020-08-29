@@ -3,7 +3,7 @@
 const Block = require('./block.js');
 const LockingTransaction = require('./locking-transaction.js');
 
-const LOCK_DURATION_ROUNDS = 55;
+const LOCK_DURATION_ROUNDS = 35;
 
 module.exports = class LockingBlock extends Block {
 
@@ -22,6 +22,9 @@ module.exports = class LockingBlock extends Block {
     this.TransactionClass = LockingTransaction;
   }
 
+  /**
+   * After a fixed number of blocks have passed, locked gold becomes unlocked again.
+   */
   unlockFunds() {
     // Updating locked gold balances if the locking time has elapsed.
     if (this.unlockingEvents.has(this.chainLength)) {
@@ -39,6 +42,7 @@ module.exports = class LockingBlock extends Block {
   }
 
   /**
+   * This method extends the parent method with support for gold locking transactions.
    * 
    * @param {LockingTransaction} tx - A locking transaction.
    * @param {LockingClient} client - Used for printing debug messages.
@@ -92,10 +96,24 @@ module.exports = class LockingBlock extends Block {
       super.totalRewards());
   }
 
+  /**
+   * Looks up the amount of gold locked for the specified client.
+   * 
+   * @param {String} addr - Address of the client.
+   * @returns {Number} Amount of the client's gold that is currently locked.
+   */
   lockedGold(addr) {
     return this.lockedFunds.get(addr) || 0;
   }
 
+  /**
+   * When rerunning a locking block, we must also replaying any gold
+   * locking/unlocking events.
+   * 
+   * @param {Block} prevBlock - The previous block in the blockchain, used for initial balances.
+   * 
+   * @returns {Boolean} - True if the block's transactions are all valid.
+   */
   rerun(prevBlock) {
     // For coinLocking, we need to track locked funds and locking events as well.
     this.lockedFunds = new Map(prevBlock.lockedFunds);

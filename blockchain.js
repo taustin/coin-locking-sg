@@ -40,6 +40,17 @@ module.exports = class Blockchain {
   static get PROOF_FOUND() { return PROOF_FOUND; }
   static get START_MINING() { return START_MINING; }
 
+  /**
+   * Produces a new genesis block, giving the specified clients
+   * the specified amount of starting gold.  This method will also
+   * set the genesis block for every client passed in.
+   * 
+   * @param {Map.<Client, number>} clientBalanceMap - A map of clients to
+   *    their starting amount of gold.
+   * @param The block class implementation.
+   * 
+   * @returns {Block} - The genesis block.
+   */
   static makeGenesis(clientBalanceMap, BlockClass) {
     let g = new BlockClass();
 
@@ -54,6 +65,15 @@ module.exports = class Blockchain {
     return g;
   }
 
+  /**
+   * Converts a string representation of a block to a new Block instance.
+   * 
+   * @param {Object} o - An object representing a block, but not an instance of Block.
+   * @param The implementation of a block.
+   * @param The implementation of a transaction.
+   * 
+   * @returns {Block}
+   */
   static deserializeBlock(o, BlockClass, TransactionClass) {
     let b = new BlockClass();
     b.chainLength = parseInt(o.chainLength);

@@ -84,6 +84,14 @@ module.exports = class Transaction {
         utils.verifySignature(this.pubKey, this.id, this.sig);
   }
 
+  /**
+   * Verifies that there is currently sufficient gold for the transaction.
+   * 
+   * @param {Block} block - Block used to check current balances
+   * 
+   * @returns {boolean} - True if there are sufficient funds for the transaction,
+   *    according to the balances from the specified block.
+   */
   sufficientFunds(block) {
     return this.totalOutput() <= block.balances.get(this.from);
   }

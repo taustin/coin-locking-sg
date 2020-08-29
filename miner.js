@@ -5,14 +5,10 @@ let Blockchain = require('./blockchain.js');
 let Client = require('./client.js');
 let Transaction = require('./transaction.js');
 
-//const NUM_ROUNDS_MINING = 2000;
-
 /**
  * Miners are clients, but they also mine blocks looking for "proofs".
  */
 module.exports = class Miner extends Client {
-  // Network message types
-  //static get START_MINING() { return "START_MINING"; }
 
   /**
    * When a new miner is created, but the PoW search is **not** yet started.
@@ -55,7 +51,6 @@ module.exports = class Miner extends Client {
    * @param {Set} [txSet] - Transactions the miner has that have not been accepted yet.
    */
   startNewSearch(txSet=new Set()) {
-    //this.currentBlock = new Block(this.address, this.lastBlock);
     this.currentBlock = new this.BlockClass(this.address, this.lastBlock);
 
     txSet.forEach((tx) => this.addTransaction(tx));
@@ -113,7 +108,7 @@ module.exports = class Miner extends Client {
 
     // We switch over to the new chain only if it is better.
     if (this.currentBlock && b.chainLength >= this.currentBlock.chainLength) {
-      this.log(`cutting over to new chain.`);
+      //this.log(`cutting over to new chain.`);
       let txSet = this.syncTransactions(b);
       this.startNewSearch(txSet);
     }
