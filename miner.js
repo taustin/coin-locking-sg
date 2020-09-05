@@ -166,4 +166,14 @@ module.exports = class Miner extends Client {
     return this.currentBlock.addTransaction(tx, this);
   }
 
+  /**
+   * When a miner posts a transaction, it must also add it to its current list of transactions.
+   *
+   * @param  {...any} args - Arguments needed for Client.postTransaction.
+   */
+  postTransaction(...args) {
+    let tx = super.postTransaction(...args);
+    return this.addTransaction(tx);
+  }
+
 };

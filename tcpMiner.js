@@ -2,8 +2,10 @@ const net = require('net');
 const readline = require('readline');
 
 const FakeNet = require('./fakeNet.js');
-const Block = require('./block.js');
-const Miner = require('./miner.js');
+const Blockchain = require('./blockchain.js');
+const LockingBlock = require('./locking-block.js');
+const LockingMiner = require('./locking-miner.js');
+const LockingTransaction = require('./locking-transaction.js');
 
 /**
  * This extends the FakeNet class to actually communicate over the network.
@@ -24,7 +26,7 @@ class TcpNet extends FakeNet {
  * Provides a command line interface for a SpartanGold miner
  * that will actually communicate over the network.
  */
-class TcpMiner extends Miner {
+class TcpMiner extends LockingMiner {
   static get REGISTER() { return "REGISTER"; }
 
   /**
@@ -92,10 +94,11 @@ class TcpMiner extends Miner {
   showPendingOut() {
     let s = "";
     this.pendingOutgoingTransactions.forEach((tx) => {
-      s += `\n    id:${tx.id} nonce:${tx.nonce} totalOutput: ${tx.totalOutput()}\n`;
+      s += `\n    id:${tx.id} nonce:${tx.nonce} totalOutput: ${tx.totalOutput()} totalLocked: ${tx.amountGoldLocked}\n`;
     });
     return s;
   }
+
 }
 
 if (process.argv.length < 3) {
@@ -108,7 +111,7 @@ let name = `Miner${port}`;
 
 let knownMiners = process.argv.slice(3);
 
-let emptyGenesis = new Block();
+let emptyGenesis = Blockchain.makeGenesis(new Map([]), LockingBlock);
 
 console.log(`Starting ${name}`);
 let minnie = new TcpMiner({name: name, connection: conn, startingBlock: emptyGenesis});
@@ -127,12 +130,14 @@ let rl = readline.createInterface({
 function readUserInput() {
   rl.question(`
   Funds: ${minnie.availableGold}
+  Locked Gold: ${minnie.lockedGold()}
   Address: ${minnie.address}
   Pending transactions: ${minnie.showPendingOut()}
   
   What would you like to do?
   *(c)onnect to miner?
   *(t)ransfer funds?
+  *(l)ock funds to generate gold?
   *(r)esend pending transactions?
   *show (b)alances?
   *show blocks for (d)ebugging and exit?
@@ -158,13 +163,29 @@ function readUserInput() {
         break;
       case 't':
         rl.question(`  amount: `, (amt) => {
+          amt = parseInt(amt);
           if (amt > minnie.availableGold) {
             console.log(`***Insufficient gold.  You only have ${minnie.availableGold}.`);
           } else {
             rl.question(`  address: `, (addr) => {
               let output = {amount: amt, address: addr};
-              console.log(`Transfering ${amt} gold to ${addr}.`);
+              console.log(`Transferring ${amt} gold to ${addr}.`);
               minnie.postTransaction([output]);
+              readUserInput();
+            });
+          }
+        });
+        break;
+      case 'l':
+        rl.question(`  amount to lock: `, (amt) => {
+          amt = parseInt(amt);
+          if (amt > minnie.availableGold) {
+            console.log(`***Insufficient gold.  You only have ${minnie.availableGold}.`);
+          } else {
+            rl.question(`  address to give generated interest: `, (addr) => {
+              let output = {amount: amt, address: addr};
+              console.log(`Locking ${amt} gold to generate ${LockingTransaction.goldGenerated(amt)} gold for ${addr}.`);
+              minnie.postLockingTransaction([output]);
               readUserInput();
             });
           }

@@ -122,6 +122,8 @@ module.exports = class Client extends EventEmitter {
    * @param {Array} outputs - The list of outputs of other addresses and
    *    amounts to pay.
    * @param {number} [fee] - The transaction fee reward to pay the miner.
+   * 
+   * @returns {Transaction} - The posted transaction.
    */
   postTransaction(outputs, fee=Blockchain.DEFAULT_TX_FEE) {
     // We calculate the total value of gold needed.
@@ -133,7 +135,7 @@ module.exports = class Client extends EventEmitter {
     }
 
     // Broadcasting the new transaction.
-    let tx = new Transaction({
+    let tx = new this.TransactionClass({
       from: this.address,
       nonce: this.nonce,
       pubKey: this.keyPair.public,
@@ -149,6 +151,8 @@ module.exports = class Client extends EventEmitter {
     this.nonce++;
 
     this.net.broadcast(Blockchain.POST_TRANSACTION, tx);
+
+    return tx;
   }
 
   /**
@@ -298,7 +302,7 @@ module.exports = class Client extends EventEmitter {
    * according to the client's own perspective of the network.
    */
   showAllBalances() {
-    this.log("Showing final balances:");
+    this.log("Showing balances:");
     for (let [id,balance] of this.lastConfirmedBlock.balances) {
       console.log(`    ${id}: ${balance}`);
     }

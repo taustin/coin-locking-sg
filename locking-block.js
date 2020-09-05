@@ -30,7 +30,6 @@ module.exports = class LockingBlock extends Block {
     if (this.unlockingEvents.has(this.chainLength)) {
       let q = this.unlockingEvents.get(this.chainLength);
       q.forEach(({clientID, amount}) => {
-        console.log(`Unlocking ${amount} gold for ${clientID} at block ${this.chainLength}`);
         let totalLocked = this.lockedFunds.get(clientID);
         this.lockedFunds.set(clientID, totalLocked - amount);
       });
@@ -63,11 +62,9 @@ module.exports = class LockingBlock extends Block {
       q.push({clientID: tx.from, amount: tx.amountGoldLocked});
       this.unlockingEvents.set(unlockingRound, q);
 
-      console.log(`Gold locked: ${goldLocked}; tx locked: ${tx.amountGoldLocked}`);
-
       // Giving generated reward to outputs.
       if (tx.data.lockingOutputs) tx.data.lockingOutputs.forEach(({amount, address}) => {
-        let receiverBalance = this.balances.get(address);
+        let receiverBalance = this.balances.get(address) || 0;
         let minted = LockingTransaction.goldGenerated(amount);
         this.balances.set(address, receiverBalance + minted);
       });

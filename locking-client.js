@@ -1,10 +1,17 @@
 "use strict";
 
-let Blockchain = require('./blockchain.js');
-let Client = require('./client.js');
-let LockingTransaction = require('./locking-transaction.js');
+const Blockchain = require('./blockchain.js');
+const Client = require('./client.js');
+const LockingBlock = require('./locking-block.js');
+const LockingTransaction = require('./locking-transaction.js');
 
 module.exports = class LockingClient extends Client {
+
+  constructor(...args) {
+    super(...args);
+    this.BlockClass = LockingBlock;
+    this.TransactionClass = LockingTransaction;
+  }
 
   /**
    * Broadcasts a transaction where the client locks gold in order to
@@ -25,7 +32,7 @@ module.exports = class LockingClient extends Client {
     }
 
     // Broadcasting the new transaction.
-    let tx = new LockingTransaction({
+    let tx = new this.TransactionClass({
       from: this.address,
       nonce: this.nonce,
       pubKey: this.keyPair.public,
@@ -47,5 +54,34 @@ module.exports = class LockingClient extends Client {
     this.log(`Posting transaction ${tx.id}`);
 
     this.net.broadcast(Blockchain.POST_TRANSACTION, tx);
+
+    return tx;
+  }
+
+  /**
+   * In addition to the usual issues with determining what gold is available,
+   * with the coin-locking model we must also consider how much gold is
+   * currently locked.
+   */
+  get availableGold() {
+    return super.availableGold - this.lockedGold();
+  }
+
+  /**
+   * Returns the amount of gold currently locked.
+   */
+  lockedGold() {
+    return this.lastConfirmedBlock.lockedGold(this.address);
+  }
+
+  /**
+   * Utility method that displays all confimed balances for all clients,
+   * according to the client's own perspective of the network.
+   */
+  showAllBalances() {
+    this.log("Showing balances:");
+    for (let [id,balance] of this.lastConfirmedBlock.balances) {
+      console.log(`    ${id}: ${balance} (${this.lastConfirmedBlock.lockedGold(id)} locked)`);
+    }
   }
 };
