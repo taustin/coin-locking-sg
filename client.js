@@ -2,9 +2,7 @@
 
 let EventEmitter = require('events');
 
-let Block = require('./block.js');
 let Blockchain = require('./blockchain.js');
-let Transaction = require('./transaction.js');
 
 let utils = require('./utils.js');
 
@@ -28,10 +26,6 @@ module.exports = class Client extends EventEmitter {
    */
   constructor({name, net, startingBlock} = {}) {
     super();
-
-    // Genericizing client
-    this.BlockClass = Block;
-    this.TransactionClass = Transaction;
 
     this.net = net;
     this.name = name;
@@ -135,7 +129,7 @@ module.exports = class Client extends EventEmitter {
     }
 
     // Broadcasting the new transaction.
-    let tx = new this.TransactionClass({
+    let tx = Blockchain.makeTransaction({
       from: this.address,
       nonce: this.nonce,
       pubKey: this.keyPair.public,
@@ -172,9 +166,7 @@ module.exports = class Client extends EventEmitter {
    */
   receiveBlock(block) {
     // If the block is a string, then deserialize it.
-    if (!(block instanceof this.BlockClass)) {
-      block = Blockchain.deserializeBlock(block, this.BlockClass, this.TransactionClass);
-    }
+    block = Blockchain.deserializeBlock(block);
 
     // Ignore the block if it has been received previously.
     if (this.blocks.has(block.id)) return null;

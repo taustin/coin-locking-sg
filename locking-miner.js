@@ -2,21 +2,15 @@
 
 const Miner = require('./miner.js');
 const LockingClient = require('./locking-client.js');
-const LockingBlock = require('./locking-block.js');
-const LockingTransaction = require('./locking-transaction.js');
 
 module.exports = class LockingMiner extends Miner {
   constructor(...args) {
     super(...args);
 
     // Adding methods from the LockingClient class.
-    //this.postLockingTransaction = LockingClient.prototype.postLockingTransaction;
-    this.plt = LockingClient.prototype.postLockingTransaction;
+    this._plt = LockingClient.prototype.postLockingTransaction;
     this.lockedGold = LockingClient.prototype.lockedGold;
     this.showAllBalances = LockingClient.prototype.showAllBalances;
-
-    this.BlockClass = LockingBlock;
-    this.TransactionClass = LockingTransaction;
   }
 
   /**
@@ -35,8 +29,7 @@ module.exports = class LockingMiner extends Miner {
    * @param  {...any} args - Arguments needed for Client.postTransaction.
    */
   postLockingTransaction(...args) {
-    let tx = this.plt(...args);
-    //let tx = LockingClient.prototype.postLockingTransaction.apply(this, ...args);
+    let tx = this._plt(...args);
     this.addTransaction(tx);
   }
 

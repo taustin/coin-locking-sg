@@ -1,9 +1,7 @@
 "use strict";
 
-let Block = require('./block.js');
 let Blockchain = require('./blockchain.js');
 let Client = require('./client.js');
-let Transaction = require('./transaction.js');
 
 /**
  * Miners are clients, but they also mine blocks looking for "proofs".
@@ -27,10 +25,6 @@ module.exports = class Miner extends Client {
   constructor({name, net, startingBlock, miningRounds=Blockchain.NUM_ROUNDS_MINING} = {}) {
     super({name, net, startingBlock});
     this.miningRounds=miningRounds;
-
-    // Genericizing miner
-    this.BlockClass = Block;
-    this.TransactionClass = Transaction;
   }
 
   /**
@@ -51,7 +45,7 @@ module.exports = class Miner extends Client {
    * @param {Set} [txSet] - Transactions the miner has that have not been accepted yet.
    */
   startNewSearch(txSet=new Set()) {
-    this.currentBlock = new this.BlockClass(this.address, this.lastBlock);
+    this.currentBlock = Blockchain.makeBlock(this.address, this.lastBlock);
 
     txSet.forEach((tx) => this.addTransaction(tx));
 
@@ -160,9 +154,7 @@ module.exports = class Miner extends Client {
    * @param {Transaction | String} tx - The transaction to add.
    */
   addTransaction(tx) {
-    if (!(tx instanceof this.TransactionClass)){
-      tx = new this.TransactionClass(tx);
-    }
+    tx = Blockchain.makeTransaction(tx);
     return this.currentBlock.addTransaction(tx, this);
   }
 

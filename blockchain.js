@@ -51,8 +51,9 @@ module.exports = class Blockchain {
    * 
    * @returns {Block} - The genesis block.
    */
-  static makeGenesis(clientBalanceMap, BlockClass) {
-    let g = new BlockClass();
+  static makeGenesis(clientBalanceMap, cfg) {
+    Blockchain.cfg = cfg;
+    let g = this.makeBlock();
 
     for (let [client, balance] of clientBalanceMap.entries()) {
       g.balances.set(client.address, balance);
@@ -68,14 +69,16 @@ module.exports = class Blockchain {
   /**
    * Converts a string representation of a block to a new Block instance.
    * 
-   * @param {Object} o - An object representing a block, but not an instance of Block.
-   * @param The implementation of a block.
-   * @param The implementation of a transaction.
+   * @param {Object} o - An object representing a block, but not necessarily an instance of Block.
    * 
    * @returns {Block}
    */
-  static deserializeBlock(o, BlockClass, TransactionClass) {
-    let b = new BlockClass();
+  static deserializeBlock(o) {
+    if (o instanceof Blockchain.cfg.Block) {
+      return o;
+    }
+
+    let b = new Blockchain.cfg.Block();
     b.chainLength = parseInt(o.chainLength);
     b.timestamp = o.timestamp;
 
@@ -91,11 +94,25 @@ module.exports = class Blockchain {
       // Likewise, transactions need to be recreated and restored in a map.
       b.transactions = new Map();
       if (o.transactions) o.transactions.forEach(([txID,txJson]) => {
-        let tx = new TransactionClass(txJson);
+        let tx = new Blockchain.cfg.Transaction(txJson);
         b.transactions.set(txID, tx);
       });
     }
 
     return b;
   }
+
+  static makeBlock(...args) {
+    return new Blockchain.cfg.Block(...args);
+  }
+
+  static makeTransaction(o) {
+    if (o instanceof Blockchain.cfg.Transaction) {
+      return o;
+    } else {
+      return new Blockchain.cfg.Transaction(o);
+    }
+    
+  }
+
 };

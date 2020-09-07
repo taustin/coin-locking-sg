@@ -6,6 +6,7 @@ let LockingClient = require('./locking-client.js');
 let LockingMiner = require('./locking-miner.js');
 
 let FakeNet = require('./fakeNet.js');
+const LockingTransaction = require('./locking-transaction.js');
 
 console.log("Starting simulation.  This may take a moment...");
 
@@ -28,7 +29,10 @@ Blockchain.makeGenesis(new Map([
   [charlie, 67],
   [minnie, 400],
   [mickey, 300],
-]), LockingBlock);
+]), {
+  Block: LockingBlock,
+  Transaction: LockingTransaction
+});
 
 function showBalances(client) {
   console.log(`Alice has ${client.lastBlock.balanceOf(alice.address)} gold, with ${client.lastBlock.lockedGold(alice.address)} gold locked.`);

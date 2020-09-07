@@ -2,15 +2,11 @@
 
 const Blockchain = require('./blockchain.js');
 const Client = require('./client.js');
-const LockingBlock = require('./locking-block.js');
-const LockingTransaction = require('./locking-transaction.js');
 
 module.exports = class LockingClient extends Client {
 
   constructor(...args) {
     super(...args);
-    this.BlockClass = LockingBlock;
-    this.TransactionClass = LockingTransaction;
   }
 
   /**
@@ -32,7 +28,7 @@ module.exports = class LockingClient extends Client {
     }
 
     // Broadcasting the new transaction.
-    let tx = new this.TransactionClass({
+    let tx = Blockchain.makeTransaction({
       from: this.address,
       nonce: this.nonce,
       pubKey: this.keyPair.public,

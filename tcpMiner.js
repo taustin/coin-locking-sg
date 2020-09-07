@@ -111,7 +111,10 @@ let name = `Miner${port}`;
 
 let knownMiners = process.argv.slice(3);
 
-let emptyGenesis = Blockchain.makeGenesis(new Map([]), LockingBlock);
+let emptyGenesis = Blockchain.makeGenesis(new Map([]), {
+  Block: LockingBlock,
+  Transaction: LockingTransaction
+});
 
 console.log(`Starting ${name}`);
 let minnie = new TcpMiner({name: name, connection: conn, startingBlock: emptyGenesis});

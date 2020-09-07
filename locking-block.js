@@ -17,9 +17,6 @@ module.exports = class LockingBlock extends Block {
     this.unlockingEvents = (prevBlock && prevBlock.unlockingEvents) ? new Map(prevBlock.unlockingEvents) : new Map();
 
     this.unlockFunds();
-
-    this.BlockClass = LockingBlock;
-    this.TransactionClass = LockingTransaction;
   }
 
   /**
