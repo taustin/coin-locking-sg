@@ -1,7 +1,7 @@
 {
   "name": "spartan-gold",
   "version": "1.0.0",
-  "description": "A simplified blockchain-based cryptocurrency for experimentation",
+  "description": "A coin-locking fork of SpartanGold",
   "main": "index.js",
   "scripts": {
     "lint": "eslint **/*.js",
